@@ -1,20 +1,20 @@
 # maxPowerFlow
 ___
-##Intro
+## Intro
 It is Python script for calculating Maximum Power Flow (MPF) in flowgate of power system. MPF determine according with [standart](https://www.so-ups.ru/fileadmin/files/laws/standards/st_max_power_rules_004-2020.pdf) of Russian System Operator of the United Power System (["SO UPS", JSC](https://www.so-ups.ru))
 
-##Technical requirments
+## Technical requirments
 * [Python (32-bit)](https://www.python.org/downloads/windows/)
 * [pywin32](https://pypi.org/project/pywin32/)
 * [RastrWin3 (x86) v 2.0.0.5709 or better](https://www.rastrwin.ru/rastr/)
 
-##Calculating requirments
+## Calculating requirments
 * Power system model .rg2 file
 * Flowgate .json file
 * Trajectory .csv file
 * Faults .json file
 
-##Manual
+## Manual
 1. Put yours .rg2 file in folder with this scripts
 2. Run "main" file
 3. Input path to .json and .csv files
@@ -22,7 +22,6 @@ It is Python script for calculating Maximum Power Flow (MPF) in flowgate of powe
 
 _Example of script running:_
 ```
-
 >> Select path to flowgate .json:
 C:\...\samples\flowgate.json
 
@@ -36,7 +35,6 @@ C:\...\samples\vector.csv
 30
 ```
 _Example of script output:_
-
 ```
 >> MPF in normal scheme (0.8*Pmax): 2216.57
 >> MPF by voltage in normal scheme (1,15*Ucr): 2778.21
@@ -48,7 +46,6 @@ _Example of script output:_
 ```
 ___
 ## Explanation
-
 _About .rg2 files_
 ```
 To find out how to make a .rg file use RastrWin3 -> Помощь -> Справка -> User Manual EN
