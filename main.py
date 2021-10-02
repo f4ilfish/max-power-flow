@@ -1,10 +1,14 @@
-import sys
-
 import data_extract
 import file_creating
 import calc_criteria
 
 print("Hello. Let`s calculate maximum power flow (MPF)")
+
+# State variables
+flowgate_lines = None
+trajectory_nodes = None
+faults_lines = None
+p_fluctuations = 0
 
 # Select path to flowgate .json
 print("Select path to flowgate .json:")
@@ -56,4 +60,3 @@ print(f"MPF by current in normal scheme (I - allowable): "
 print(f"MPF by current in after emergency scheme (I - critical): "
       f"{calc_criteria.criteria6(faults_lines, flowgate_lines)}")
 print()
-
