@@ -16,4 +16,9 @@ file_creating.do_ut2(trajectory_nodes)
 print(calc_criteria.criteria1(30))
 print(calc_criteria.criteria2(30))
 print(calc_criteria.criteria3(30, faults_lines))
+print(calc_criteria.criteria4(faults_lines))
+print(calc_criteria.criteria5(flowgate_lines))
+print(calc_criteria.criteria6(faults_lines, flowgate_lines))
+
+
 
