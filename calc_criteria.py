@@ -5,245 +5,329 @@ rastr = win32com.client.Dispatch('Astra.Rastr')
 
 
 def criteria1(p_fluctuations: float) -> float:
-    """ Calculation of the maximum power flow (mpf) in flowgate in normal scheme"""
+    """ Calculation of the maximum power flow (MPF) in normal regime """
 
-    # Load a clean regime and set regime parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 1, 1)
 
     # Iterative weighting of regime
-    regime_config.do_ut(rastr)
+    regime_config.do_regime_weight(rastr)
 
-    # Maximum power flow
-    mpf_1 = round((abs(rastr.Tables('sechen').Cols('psech').Z(0)) * 0.8 - p_fluctuations), 2)
+    # Maximum power flow by criteria 1
+    mpf_1 = abs(
+        rastr.Tables('sechen').Cols('psech').Z(0)) * 0.8 - p_fluctuations
+    mpf_1 = round(mpf_1, 2)
     return mpf_1
 
 
 def criteria2(p_fluctuations: float) -> float:
-    """Calculation of the maximum power flow (mpf) by load's nodes voltage in flowgate in normal scheme"""
+    """ Calculation of the maximum power flow by the acceptable voltage level
+    in the pre-emergency regime """
 
-    # Load a clean regime and set regime parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 0, 1)
 
-    # Redefining objects RastrWin3
+    # Redefine the COM path to the RastrWin3 node table
     nodes = rastr.Tables('node')
 
-    # Determination of the minimum voltage in load's nodes
+    # Determining the acceptable voltage level of nodes with load
     i = 0
-
-    while i < rastr.Tables('node').Size:
-        # Conditions to determine node type (1 - load's nodes)
+    while i < nodes.Size:
+        # Load node search (1 - type of node with load)
         if nodes.Cols('tip').Z(i) == 1:
-            u_kr = nodes.Cols('uhom').Z(i) * 0, 7  # Critical voltage (Ucr = Unom * 0,7)
-            u_min = u_kr * 1, 15  # Minimum voltage (Umin = Ucr * 1,15)
+            u_kr = nodes.Cols('uhom').Z(i) * 0.7  # Critical voltage level
+            u_min = u_kr * 1.15  # Acceptable voltage level
             nodes.Cols('umin').SetZ(i, u_min)
             nodes.Cols('contr_v').SetZ(i, 1)
         i += 1
 
     # Iterative weighting of regime
-    regime_config.do_ut(rastr)
+    regime_config.do_regime_weight(rastr)
 
-    # Maximum power flow
-    mpf_2 = round((abs(rastr.Tables('sechen').Cols('psech').Z(0)) - p_fluctuations), 2)
+    # MPF by criteria 2
+    mpf_2 = abs(rastr.Tables('sechen').Cols('psech').Z(0)) - p_fluctuations
+    mpf_2 = round(mpf_2, 2)
     return mpf_2
 
 
 def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
-    """ Calculation of the maximum power flow (mpf) in flowgate in after emergency scheme"""
+    """ Calculation of the maximum power flow (MPF)
+    in the post-emergency regime after fault """
 
-    # Load a clean regime and set regime parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 1, 1)
 
-    # Create a list of mpf for each faults
+    # Redefine the COM path to the RastrWin3 branch table
+    branches = rastr.Tables('vetv')
+    # Redefine the COM path to the RastrWin3 flowgate table
+    flowgate = rastr.Tables('sechen')
+
+    # List of MPF for each fault
     mpf_3 = []
 
-    # Redefining objects RastrWin3
-    branches = rastr.Tables('vetv')
-
-    # Determine mpf
-    i = 0
-    j = 1
-    # Enumerate each fault's lines
+    # Iterating over each fault
     for line in faults_lines:
-        line_polus = faults_lines[line]['ip']  # Node number of the start transmission line
-        line_quit = faults_lines[line]['iq']  # Node number of the start transmission line
+        # Node number of the start branch
+        node_start_branch = faults_lines[line]['ip']
+        # Node number of the start branch
+        node_end_branch = faults_lines[line]['iq']
+        # Number of parallel branch
+        parallel_number = faults_lines[line]['np']
+        # Status of branch (0 - on / 1 - off)
+        branch_status = faults_lines[line]['sta']
 
-        # Enumerate each row in Branches
+        # Iterating over each branches in RastrWin3
+        i = 0
         while i < branches.Size:
 
-            # Condition for finding transmission line
-            if (branches.Cols('ip').Z(i) == line_polus) and (branches.Cols('iq').Z(i) == line_quit):
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 1)  # Do fault
+            # Search branch with fault
+            if (branches.Cols('ip').Z(i) == node_start_branch) and \
+                    (branches.Cols('iq').Z(i) == node_end_branch) and \
+                    (branches.Cols('np').Z(i) == parallel_number):
+
+                # Remember previous branch status
+                pr_branch_status = branches.Cols('sta').Z(i)
+                # Do fault
+                branches.Cols('sta').SetZ(i, branch_status)
 
                 # Do regime weighing
-                regime_config.do_ut(rastr)
+                regime_config.do_regime_weight(rastr)
 
-                # Find mpf in after emergency scheme
-                mpf = abs(rastr.Tables('sechen').Cols('psech').Z(0))
-                mpf_reserve = abs(rastr.Tables('sechen').Cols('psech').Z(0)) * 0.92
+                # MPF in the post-emergency regime after fault
+                mpf = abs(flowgate.Cols('psech').Z(0))
+                # Acceptable level of MPF in such scheme
+                mpf_acceptable = abs(flowgate.Cols('psech').Z(0)) * 0.92
 
-                # Step back
-                while mpf > mpf_reserve:
-                    rastr.GetToggle().MoveOnPosition(len(rastr.GetToggle().GetPositions()) - j)
-                    mpf = abs(rastr.Tables('sechen').Cols('psech').Z(0))
+                # Iterative return to Acceptable level of MPF
+                j = 1
+                while mpf > mpf_acceptable:
+                    rastr.GetToggle().MoveOnPosition(
+                        len(rastr.GetToggle().GetPositions()) - j)
+                    mpf = abs(flowgate.Cols('psech').Z(0))
                     j += 1
-                j = 1  # Resetting step the counter
 
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 0)  # Remove fault
-                rastr.rgm('p')  # Calculate regime
+                # Remove fault
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                # Re-calculation of regime
+                rastr.rgm('p')
 
-                # Maximum power flow
-                mpf = round((abs(rastr.Tables('sechen').Cols('psech').Z(0)) - p_fluctuations), 2)
+                # MPF by criteria 3
+                mpf = abs(
+                    rastr.Tables('sechen').Cols('psech').Z(0)) - p_fluctuations
+                mpf = round(mpf, 2)
                 mpf_3.append(mpf)
 
-                # Reset to clear regime
-                rastr.Load(1, 'regime.rg2', 'shablon/режим.rg2')
-
-            i += 1  # To the next row of Branches
-        i = 0  # Reset the row counter / To the next fault's line
+                # Reset to clean regime
+                regime_config.load_clean_regime(rastr)
+            i += 1
     return min(mpf_3)
 
 
-def criteria4(faults_lines: dict) -> float:
-    """ Calculation of the maximum power flow (mpf) in flowgate by voltage in after emergency scheme"""
+def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
+    """ Calculation of the maximum power flow (MPF)
+    by the acceptable voltage level
+    in the post-emergency regime after fault """
 
-    # Load a clean regime and set parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 0, 1)
 
-    # Create a list of mpf for each faults
+    # Redefine the COM path to the RastrWin3 node table
+    nodes = rastr.Tables('node')
+    # Redefine the COM path to the RastrWin3 branch table
+    branches = rastr.Tables('vetv')
+    # Redefine the COM path to the RastrWin3 flowgate table
+    flowgate = rastr.Tables('sechen')
+
+    # Determining the acceptable voltage level of nodes with load
+    j = 0
+    while j < nodes.Size:
+        # Load node search (1 - type of node with load)
+        if nodes.Cols('tip').Z(j) == 1:
+            # Critical voltage level
+            u_kr = nodes.Cols('uhom').Z(j) * 0.7
+            # Acceptable voltage level
+            u_min = u_kr * 1.1
+            nodes.Cols('umin').SetZ(j, u_min)
+        j += 1
+
+    # List of MPF for each fault
     mpf_4 = []
 
-    # Redefining objects RastrWin3
-    branches = rastr.Tables('vetv')
-    nodes = rastr.Tables('node')
-
-    # Determine mpf
-    i = 0
-    k = 0
-
-    # Determine critical and minimum load`s nodes voltages
-    while k < nodes.Size:
-        if nodes.Cols('tip').Z(k) == 1:
-            u_kr = nodes.Cols('uhom').Z(k) * 0, 7
-            u_min = u_kr * 1, 1
-            nodes.Cols('umin').SetZ(k, u_min)
-        k = k + 1
-
-    # Enumerate each fault's lines
+    # Iterating over each fault
     for line in faults_lines:
-        line_polus = faults_lines[line]['ip']  # Node number of the start transmission line
-        line_quit = faults_lines[line]['iq']  # Node number of the start transmission line
+        # Node number of the start transmission line
+        node_start_branch = faults_lines[line]['ip']
+        # Node number of the start transmission line
+        node_end_branch = faults_lines[line]['iq']
+        # Number of branch
+        parallel_number = faults_lines[line]['np']
+        # Status of branch (0 - on / 1 - off)
+        branch_status = faults_lines[line]['sta']
 
-        # Enumerate each row in Branches
+        # Iterating over branch in RastrWin3
+        i = 0
         while i < branches.Size:
 
-            # Condition for finding transmission line
-            if (branches.Cols('ip').Z(i) == line_polus) and (branches.Cols('iq').Z(i) == line_quit):
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 1)  # Do fault
+            # Search branch with fault
+            if (branches.Cols('ip').Z(i) == node_start_branch) and \
+                    (branches.Cols('iq').Z(i) == node_end_branch) and \
+                    (branches.Cols('np').Z(i) == parallel_number):
+
+                # Remember previous branch status
+                pr_branch_status = branches.Cols('sta').Z(i)
+                # Do fault
+                branches.Cols('sta').SetZ(i, branch_status)
 
                 # Do regime weighing
-                regime_config.do_ut(rastr)
-
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 1)  # Remove fault
+                regime_config.do_regime_weight(rastr)
+                # Remove fault
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                # Re-calculation of regime
                 rastr.rgm('p')
 
-                # Maximum power flow
-                mpf = round(abs(rastr.Tables('sechen').Cols('psech').Z(0)), 2)
+                # MPF be criteria 4
+                mpf = abs(
+                    flowgate.Cols('psech').Z(0)) - p_fluctuations
+                mpf = round(mpf, 2)
                 mpf_4.append(mpf)
 
-                # Reset to clear regime
-                rastr.Load(1, 'regime.rg2', 'shablon/режим.rg2')
-
-            i += 1  # To the next row of Branches
-        i = 0  # Reset the row counter / To the next fault's line
+                # Reset to clean regime
+                regime_config.load_clean_regime(rastr)
+            i += 1
     return min(mpf_4)
 
 
-def criteria5(flowgate_lines: dict) -> float:
-    """ Calculation of a maximum power flow (mpf) in flowgate by current in normal scheme"""
+def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
+    """ Calculation of a maximum power flow (MPF) by acceptable current
+    in normal regime """
 
-    # Load a clean regime and set regime parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 1, 0)
 
-    # Redefining objects RastrWin3
+    # Redefine the COM path to the RastrWin3 branch table
     branches = rastr.Tables('vetv')
+    # Redefine the COM path to the RastrWin3 flowgate table
+    flowgate = rastr.Tables('sechen')
+    # Redefine the COM path to collection of regimes RastrWin3
 
-    # Take into control flowgate`s lines
-    i = 0
+    # Determine of acceptable current level of flowgate`s branch
+    for control_lines in flowgate_lines:
+        line_param = flowgate_lines[control_lines]
 
-    for line in flowgate_lines:
-        while i < rastr.Tables('vetv').Size:
-            if (flowgate_lines[line]['ip'] == branches.Cols('ip').Z(i)) and (
-                    flowgate_lines[line]['iq'] == branches.Cols('iq').Z(i)):
-                branches.Cols('contr_i').SetZ(i, 1)
-                branches.Cols('i_dop').SetZ(i, rastr.Tables('vetv').Cols('i_dop_r').Z(i))
-            i = i + 1
+        # Iterating over each branches in RastrWin3
         i = 0
+        while i < branches.Size:
 
-    # Determine mpf
-    regime_config.do_ut(rastr)
+            # Search branch that need to control
+            if (line_param['ip'] == branches.Cols('ip').Z(i)) and \
+                    (line_param['iq'] == branches.Cols('iq').Z(i)) and \
+                    (line_param['np'] == branches.Cols('np').Z(i)):
+                # Take into control certain branch
+                branches.Cols('contr_i').SetZ(i, 1)
+                branches.Cols('i_dop').SetZ(i, branches.Cols('i_dop_r').Z(i))
+            i += 1
 
-    mpf_5 = round(abs(rastr.Tables('sechen').Cols('psech').Z(0)), 2)
+    # Iterative weighting of regime
+    regime_config.do_regime_weight(rastr)
+
+    # MPF by criteria 5
+    mpf_5 = abs(flowgate.Cols('psech').Z(0)) - p_fluctuations
+    mpf_5 = round(mpf_5, 2)
     return mpf_5
 
 
-def criteria6(faults_lines: dict, flowgate_lines: dict):
-    """ Calculation of the maximum power flow (mpf) in flowgate by current in after emergency scheme"""
+def criteria6(p_fluctuations: float,
+              faults_lines: dict,
+              flowgate_lines: dict):
+    """ Calculation of a maximum power flow (MPF)
+    by acceptable current  in the post-emergency regime after fault """
 
-    # Load a clean regime and set regime parameters
-    regime_config.load_clean(rastr)
+    # Load a regime files and set weighting parameters
+    regime_config.load_clean_regime(rastr)
+    regime_config.load_sech(rastr)
+    regime_config.load_traj(rastr)
     regime_config.set_regime(rastr, 200, 1, 1, 0)
 
-    # Create a list of mpf for each faults
+    # Redefine the COM path to the RastrWin3 branch table
+    branches = rastr.Tables('vetv')
+    # Redefine the COM path to the RastrWin3 flowgate table
+    flowgate = rastr.Tables('sechen')
+
+    # List of MPF for each fault
     mpf_6 = []
 
-    # Redefining objects RastrWin3
-    branches = rastr.Tables('vetv')
-
-    # Determine mpf
-    i = 0
-    j = 0
-
-    # Enumerate each fault's lines
+    # Iterating over each fault
     for line in faults_lines:
-        line_polus = faults_lines[line]['ip']  # Node number of the start transmission line
-        line_quit = faults_lines[line]['iq']  # Node number of the start transmission line
+        # Node number of the start branch
+        node_start_branch = faults_lines[line]['ip']
+        # Node number of the end branch
+        node_end_branch = faults_lines[line]['iq']
+        # Number of parallel branch
+        parallel_number = faults_lines[line]['np']
+        # Status of branch (0 - on / 1 - off)
+        branch_status = faults_lines[line]['sta']
 
-        # Take into control flowgate`s lines
-        for abc in flowgate_lines:
-            while j < branches.Size:
-                if (flowgate_lines[abc]['ip'] == branches.Cols('ip').Z(j)) and (
-                        flowgate_lines[abc]['iq'] == branches.Cols('iq').Z(j)):
-                    branches.Cols('contr_i').SetZ(j, 1)
-                    branches.Cols('i_dop').SetZ(j, branches.Cols('i_dop_r_av').Z(j))
-                j += 1
-            # Step to the next line flowgate
+        # Determine of acceptable current level of flowgate`s branch
+        for control_lines in flowgate_lines:
+            line_param = flowgate_lines[control_lines]
+
+            # Iterating over each branch in RastrWin3
             j = 0
+            while j < branches.Size:
+                # Search branch that need to control
+                if (line_param['ip'] == branches.Cols('ip').Z(j)) and \
+                        (line_param['iq'] == branches.Cols('iq').Z(j)) and \
+                        (line_param['np'] == branches.Cols('np').Z(j)):
 
-        # Enumerate each row in Branches
+                    # Take into control certain branch
+                    branches.Cols('contr_i').SetZ(j, 1)
+                    branches.Cols('i_dop').SetZ(
+                        j, branches.Cols('i_dop_r_av').Z(j))
+                j += 1
+
+        # Iterating over each branch in RastrWin3
+        i = 0
         while i < branches.Size:
 
-            # Condition for finding transmission line
-            if (branches.Cols('ip').Z(i) == line_polus) and (branches.Cols('iq').Z(i) == line_quit):
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 1)  # Do fault
+            # # Search branch with fault
+            if (branches.Cols('ip').Z(i) == node_start_branch) and \
+                    (branches.Cols('iq').Z(i) == node_end_branch) and \
+                    (branches.Cols('np').Z(i) == parallel_number):
 
-                # Do regime weighing
-                regime_config.do_ut(rastr)
+                # Remember previous branch status
+                pr_branch_status = branches.Cols('sta').Z(i)
+                # Do fault
+                branches.Cols('sta').SetZ(i, branch_status)
 
-                rastr.Tables('vetv').Cols('sta').SetZ(i, 1)  # Remove fault
+                # Iterative weighting of regime
+                regime_config.do_regime_weight(rastr)
+
+                # Remove fault
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                # Re-calculation of regime
                 rastr.rgm('p')
 
-                # Maximum power flow
-                mpf = round(abs(rastr.Tables('sechen').Cols('psech').Z(0)), 2)
+                # MPF by criteria 6
+                mpf = abs(flowgate.Cols('psech').Z(0)) - p_fluctuations
+                mpf = round(mpf, 2)
                 mpf_6.append(mpf)
 
-                # Reset to clear regime
-                rastr.Load(1, 'regime.rg2', 'shablon/режим.rg2')
-
+                # Reset to clean regime
+                regime_config.load_clean_regime(rastr)
             i += 1  # To the next row of Branches
-        i = 0  # Reset the row counter / To the next fault's line
     return min(mpf_6)

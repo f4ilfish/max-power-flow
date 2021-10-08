@@ -3,8 +3,9 @@ import win32com.client
 rastr = win32com.client.Dispatch('Astra.Rastr')
 
 
-def do_sch(flowgate_lines: dict, flowgate_name: str) -> None:
-    """ Create .sch file based on RastrWin3 template from flowgate dictionary"""
+def create_file_sch(flowgate_lines: dict, flowgate_name: str) -> None:
+    """ Create .sch file based on RastrWin3 template
+    from flowgate dictionary"""
 
     # Create new empty .sch file based on template
     rastr.Save('sech.sch', 'shablon/сечения.sch')
@@ -27,9 +28,7 @@ def do_sch(flowgate_lines: dict, flowgate_name: str) -> None:
     flow_gate.Cols('sta').SetZ(0, 1)
 
     # Fill a list of transmission lines forms the flowgate
-    i = 0
-
-    for line in flowgate_lines:
+    for i, line in enumerate(flowgate_lines):
         group_line.AddRow()
         group_line.Cols('ns').SetZ(i, 1)
 
@@ -41,14 +40,13 @@ def do_sch(flowgate_lines: dict, flowgate_name: str) -> None:
         group_line.Cols('ip').SetZ(i, start_node)
         group_line.Cols('iq').SetZ(i, end_node)
 
-        i += 1
-
     # Resave .sch file
     rastr.Save('sech.sch', 'shablon/сечения.sch')
 
 
-def do_ut2(trajectory_nodes: list) -> None:
-    """ Create .ut2 file based on RastrWin3 template from list of trajectories`s nodes"""
+def create_file_ut2(trajectory_nodes: list) -> None:
+    """ Create .ut2 file based on RastrWin3 template
+    from list of trajectories`s nodes"""
 
     # Create new empty .ut2 file based on template
     rastr.Save('traj.ut2', 'shablon/траектория утяжеления.ut2')
@@ -62,11 +60,11 @@ def do_ut2(trajectory_nodes: list) -> None:
     trajectory.DelRows()
 
     # Fill a .ut2 list of nodes forms trajectory
-    i = 0
-    # To avoid duplicates of nodes create empty dictionary this is intended for nodes
-    # that can be generator and load at the same time
+    # To avoid duplicates of nodes
+    # create empty dictionary this is intended for nodes
+    # that can be generator and load at the same
     node_data = {}  # create empty dictionary
-
+    i = 0
     for node in trajectory_nodes:
         node_type = node['variable']  # Pg - generator / Pn - load
         node_number = node['node']
@@ -80,11 +78,14 @@ def do_ut2(trajectory_nodes: list) -> None:
             i += 1
             # Fill row in .ut2
             trajectory.AddRow()
-            trajectory.Cols('ny').SetZ(node_data[node_number], node_number)
-            trajectory.Cols(node_type).SetZ(node_data[node_number], power_change)
+            trajectory.Cols('ny').SetZ(node_data[node_number],
+                                       node_number)
+            trajectory.Cols(node_type).SetZ(node_data[node_number],
+                                            power_change)
         else:
             # Find existing pair and add to existing row in .ut2
-            trajectory.Cols(node_type).SetZ(node_data[node_number], power_change)
+            trajectory.Cols(node_type).SetZ(node_data[node_number],
+                                            power_change)
 
         # Try add load's power factor
         if trajectory.Cols('tg').Z(node_data[node_number]) == 0:

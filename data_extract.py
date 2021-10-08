@@ -24,3 +24,4 @@ def json_to_dic(path: str) -> dict:
         dictionary = json.load(json_data)
 
     return dictionary
+

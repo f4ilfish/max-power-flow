@@ -36,12 +36,12 @@ C:\...\samples\vector.csv
 ```
 _Example of script output:_
 ```
->> MPF in normal scheme (0.8*Pmax): 2216.57
->> MPF by voltage in normal scheme (1,15*Ucr): 2778.21
->> MPF in after emergency scheme (0.92*Pmax): 2132.61
->> MPF by voltage in after emergency scheme (1.1*Ucr): 2348.49
->> MPF by current in normal scheme (I - allowable): 1817.14
->> MPF by current in after emergency scheme (I - critical): 1503.82
+>> MPF in normal regime (0.8*Pmax): 2216.57
+>> MPF by the acceptable voltage level in the pre-emergency regime (1,15*Ucr): 2757.89
+>> MPF in the post-emergency regime after fault (0.92*Pmax): 2132.61
+>> MPF by the acceptable voltage level in the post-emergency regime after fault (1.1*Ucr): 2339.69
+>> MPF by acceptable current in normal regime (Iacc) (Iacc): 1787.14
+>> MPF by acceptable current in the post-emergency regime after fault (Iem_acc): 1479.26
 
 ```
 ___
