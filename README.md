@@ -1,9 +1,8 @@
-# maxPowerFlow
-___
+# maxPowerFlow ⚡
 ## Intro
 It is Python script for calculating Maximum Power Flow (MPF) in flowgate of power system. MPF determine according with [standart](https://www.so-ups.ru/fileadmin/files/laws/standards/st_max_power_rules_004-2020.pdf) of Russian System Operator of the United Power System (["SO UPS", JSC](https://www.so-ups.ru))
 
-## Technical requirments
+## Technical requirments 
 * [Python (32-bit)](https://www.python.org/downloads/windows/)
 * [pywin32](https://pypi.org/project/pywin32/)
 * [RastrWin3 (x86) v 2.0.0.5709 or better](https://www.rastrwin.ru/rastr/)
@@ -21,7 +20,7 @@ It is Python script for calculating Maximum Power Flow (MPF) in flowgate of powe
 4. Input value of active power fluctuation
 
 _Example of script running:_
-```
+```commandline
 >> Select path to flowgate .json:
 C:\...\samples\flowgate.json
 
@@ -35,7 +34,7 @@ C:\...\samples\vector.csv
 30
 ```
 _Example of script output:_
-```
+```commandline
 >> MPF in normal regime (0.8*Pmax): 2216.57
 >> MPF by the acceptable voltage level in the pre-emergency regime (1,15*Ucr): 2757.89
 >> MPF in the post-emergency regime after fault (0.92*Pmax): 2132.61
@@ -52,9 +51,9 @@ To find out how to make a .rg file use RastrWin3 -> Помощь -> Справк
 ```
 
 _About flowgate .json_
-```
-Use flowgate .json file such a this structure:
 
+Use flowgate .json file such a this structure:
+```json
     {
 	    "line_1": {
 		    "ip": 17, 
@@ -80,9 +79,9 @@ iq  | Node number according to the end of the line in .rg2 | int
 np  | Parallel line number in .rg2 | usually 1 or 2
 
 _About faults .json_
-```
-Use faults .json file such a this structure:
 
+Use faults .json file such a this structure:
+```json
     {
 	    "outage_of_6_11": {
 		    "ip": 6, 
@@ -106,9 +105,9 @@ np  | Parallel line number in .rg2 | usually 1 or 2
 sta | Line status     | 0 - on, 1 - off
 
 _About trajectory .csv_
-```
-Use faults .json file such a this structure:
 
+Use faults .json file such a this structure:
+```editorconfig
     variable,node,value,tg
     pn,23,-3.0,1
     pn,24,-3.0,1
