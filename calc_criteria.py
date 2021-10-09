@@ -37,15 +37,13 @@ def criteria2(p_fluctuations: float) -> float:
     nodes = rastr.Tables('node')
 
     # Determining the acceptable voltage level of nodes with load
-    i = 0
-    while i < nodes.Size:
+    for i in range(nodes.Size):
         # Load node search (1 - type of node with load)
         if nodes.Cols('tip').Z(i) == 1:
             u_kr = nodes.Cols('uhom').Z(i) * 0.7  # Critical voltage level
             u_min = u_kr * 1.15  # Acceptable voltage level
             nodes.Cols('umin').SetZ(i, u_min)
             nodes.Cols('contr_v').SetZ(i, 1)
-        i += 1
 
     # Iterative weighting of regime
     regime_config.do_regime_weight(rastr)
@@ -86,8 +84,7 @@ def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
         branch_status = faults_lines[line]['sta']
 
         # Iterating over each branches in RastrWin3
-        i = 0
-        while i < branches.Size:
+        for i in range(branches.Size):
 
             # Search branch with fault
             if (branches.Cols('ip').Z(i) == node_start_branch) and \
@@ -107,11 +104,13 @@ def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
                 # Acceptable level of MPF in such scheme
                 mpf_acceptable = abs(flowgate.Cols('psech').Z(0)) * 0.92
 
+                # Redefine the COM path to the RastrWin3 regime collections
+                toggle = rastr.GetToggle()
+
                 # Iterative return to Acceptable level of MPF
                 j = 1
                 while mpf > mpf_acceptable:
-                    rastr.GetToggle().MoveOnPosition(
-                        len(rastr.GetToggle().GetPositions()) - j)
+                    toggle.MoveOnPosition(len(toggle.GetPositions()) - j)
                     mpf = abs(flowgate.Cols('psech').Z(0))
                     j += 1
 
@@ -127,8 +126,9 @@ def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
                 mpf_3.append(mpf)
 
                 # Reset to clean regime
-                regime_config.load_clean_regime(rastr)
-            i += 1
+                toggle.MoveOnPosition(1)
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                break
     return min(mpf_3)
 
 
@@ -151,8 +151,7 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
     flowgate = rastr.Tables('sechen')
 
     # Determining the acceptable voltage level of nodes with load
-    j = 0
-    while j < nodes.Size:
+    for j in range(nodes.Size):
         # Load node search (1 - type of node with load)
         if nodes.Cols('tip').Z(j) == 1:
             # Critical voltage level
@@ -160,7 +159,6 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
             # Acceptable voltage level
             u_min = u_kr * 1.1
             nodes.Cols('umin').SetZ(j, u_min)
-        j += 1
 
     # List of MPF for each fault
     mpf_4 = []
@@ -177,8 +175,7 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
         branch_status = faults_lines[line]['sta']
 
         # Iterating over branch in RastrWin3
-        i = 0
-        while i < branches.Size:
+        for i in range(branches.Size):
 
             # Search branch with fault
             if (branches.Cols('ip').Z(i) == node_start_branch) and \
@@ -204,8 +201,10 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
                 mpf_4.append(mpf)
 
                 # Reset to clean regime
-                regime_config.load_clean_regime(rastr)
-            i += 1
+                rastr.GetToggle().MoveOnPosition(1)
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                break
+
     return min(mpf_4)
 
 
@@ -230,8 +229,7 @@ def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
         line_param = flowgate_lines[control_lines]
 
         # Iterating over each branches in RastrWin3
-        i = 0
-        while i < branches.Size:
+        for i in range(branches.Size):
 
             # Search branch that need to control
             if (line_param['ip'] == branches.Cols('ip').Z(i)) and \
@@ -240,7 +238,6 @@ def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
                 # Take into control certain branch
                 branches.Cols('contr_i').SetZ(i, 1)
                 branches.Cols('i_dop').SetZ(i, branches.Cols('i_dop_r').Z(i))
-            i += 1
 
     # Iterative weighting of regime
     regime_config.do_regime_weight(rastr)
@@ -287,8 +284,7 @@ def criteria6(p_fluctuations: float,
             line_param = flowgate_lines[control_lines]
 
             # Iterating over each branch in RastrWin3
-            j = 0
-            while j < branches.Size:
+            for j in range(branches.Size):
                 # Search branch that need to control
                 if (line_param['ip'] == branches.Cols('ip').Z(j)) and \
                         (line_param['iq'] == branches.Cols('iq').Z(j)) and \
@@ -296,13 +292,11 @@ def criteria6(p_fluctuations: float,
 
                     # Take into control certain branch
                     branches.Cols('contr_i').SetZ(j, 1)
-                    branches.Cols('i_dop').SetZ(
-                        j, branches.Cols('i_dop_r_av').Z(j))
-                j += 1
+                    branches.Cols('i_dop').\
+                        SetZ(j, branches.Cols('i_dop_r_av').Z(j))
 
         # Iterating over each branch in RastrWin3
-        i = 0
-        while i < branches.Size:
+        for i in range(branches.Size):
 
             # # Search branch with fault
             if (branches.Cols('ip').Z(i) == node_start_branch) and \
@@ -328,6 +322,7 @@ def criteria6(p_fluctuations: float,
                 mpf_6.append(mpf)
 
                 # Reset to clean regime
-                regime_config.load_clean_regime(rastr)
-            i += 1  # To the next row of Branches
+                rastr.GetToggle().MoveOnPosition(1)
+                branches.Cols('sta').SetZ(i, pr_branch_status)
+                break
     return min(mpf_6)
