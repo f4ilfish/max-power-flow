@@ -58,7 +58,7 @@ print(f"MPF by the acceptable voltage level "
       f"in the post-emergency regime after fault (1.1*Ucr): "
       f"{calc_criteria.criteria4(p_fluctuations, faults_lines)}")
 print(f"MPF by acceptable current in normal regime (Iacc): "
-      f"{calc_criteria.criteria5(p_fluctuations, flowgate_lines)}")
+      f"{calc_criteria.criteria5(p_fluctuations)}")
 print(f"MPF by acceptable current"
       f"in the post-emergency regime after fault (Iem_acc): "
-      f"{calc_criteria.criteria6(p_fluctuations, faults_lines, flowgate_lines)}")
+      f"{calc_criteria.criteria6(p_fluctuations, faults_lines)}")

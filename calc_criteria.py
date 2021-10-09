@@ -204,11 +204,10 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
                 rastr.GetToggle().MoveOnPosition(1)
                 branches.Cols('sta').SetZ(i, pr_branch_status)
                 break
-
     return min(mpf_4)
 
 
-def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
+def criteria5(p_fluctuations: float) -> float:
     """ Calculation of a maximum power flow (MPF) by acceptable current
     in normal regime """
 
@@ -224,20 +223,10 @@ def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
     flowgate = rastr.Tables('sechen')
     # Redefine the COM path to collection of regimes RastrWin3
 
-    # Determine of acceptable current level of flowgate`s branch
-    for control_lines in flowgate_lines:
-        line_param = flowgate_lines[control_lines]
-
-        # Iterating over each branches in RastrWin3
-        for i in range(branches.Size):
-
-            # Search branch that need to control
-            if (line_param['ip'] == branches.Cols('ip').Z(i)) and \
-                    (line_param['iq'] == branches.Cols('iq').Z(i)) and \
-                    (line_param['np'] == branches.Cols('np').Z(i)):
-                # Take into control certain branch
-                branches.Cols('contr_i').SetZ(i, 1)
-                branches.Cols('i_dop').SetZ(i, branches.Cols('i_dop_r').Z(i))
+    # Iterating over each branches in RastrWin3
+    for i in range(branches.Size):
+        branches.Cols('contr_i').SetZ(i, 1)
+        branches.Cols('i_dop').SetZ(i, branches.Cols('i_dop_r').Z(i))
 
     # Iterative weighting of regime
     regime_config.do_regime_weight(rastr)
@@ -248,9 +237,7 @@ def criteria5(p_fluctuations: float, flowgate_lines: dict) -> float:
     return mpf_5
 
 
-def criteria6(p_fluctuations: float,
-              faults_lines: dict,
-              flowgate_lines: dict):
+def criteria6(p_fluctuations: float, faults_lines: dict):
     """ Calculation of a maximum power flow (MPF)
     by acceptable current  in the post-emergency regime after fault """
 
@@ -264,6 +251,11 @@ def criteria6(p_fluctuations: float,
     branches = rastr.Tables('vetv')
     # Redefine the COM path to the RastrWin3 flowgate table
     flowgate = rastr.Tables('sechen')
+
+    # Iterating over each branch in RastrWin3
+    for j in range(branches.Size):
+        branches.Cols('contr_i').SetZ(j, 1)
+        branches.Cols('i_dop').SetZ(j, branches.Cols('i_dop_r_av').Z(j))
 
     # List of MPF for each fault
     mpf_6 = []
@@ -279,26 +271,9 @@ def criteria6(p_fluctuations: float,
         # Status of branch (0 - on / 1 - off)
         branch_status = faults_lines[line]['sta']
 
-        # Determine of acceptable current level of flowgate`s branch
-        for control_lines in flowgate_lines:
-            line_param = flowgate_lines[control_lines]
-
-            # Iterating over each branch in RastrWin3
-            for j in range(branches.Size):
-                # Search branch that need to control
-                if (line_param['ip'] == branches.Cols('ip').Z(j)) and \
-                        (line_param['iq'] == branches.Cols('iq').Z(j)) and \
-                        (line_param['np'] == branches.Cols('np').Z(j)):
-
-                    # Take into control certain branch
-                    branches.Cols('contr_i').SetZ(j, 1)
-                    branches.Cols('i_dop').\
-                        SetZ(j, branches.Cols('i_dop_r_av').Z(j))
-
         # Iterating over each branch in RastrWin3
         for i in range(branches.Size):
-
-            # # Search branch with fault
+            # Search branch with fault
             if (branches.Cols('ip').Z(i) == node_start_branch) and \
                     (branches.Cols('iq').Z(i) == node_end_branch) and \
                     (branches.Cols('np').Z(i) == parallel_number):
