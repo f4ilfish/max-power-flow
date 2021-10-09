@@ -39,7 +39,7 @@ _Example of script output:_
 >> MPF by the acceptable voltage level in the pre-emergency regime (1,15*Ucr): 2757.89
 >> MPF in the post-emergency regime after fault (0.92*Pmax): 2132.61
 >> MPF by the acceptable voltage level in the post-emergency regime after fault (1.1*Ucr): 2339.69
->> MPF by acceptable current in normal regime (Iacc) (Iacc): 1787.14
+>> MPF by acceptable current in normal regime (Iacc) (Iacc): 1708.17
 >> MPF by acceptable current in the post-emergency regime after fault (Iem_acc): 1479.26
 
 ```
