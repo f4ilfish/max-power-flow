@@ -14,24 +14,17 @@ It is Python script for calculating Maximum Power Flow (MPF) in flowgate of powe
 * Faults .json file
 
 ## Manual
-1. Put yours .rg2 file in folder with this scripts
+1. Make yours .rg2 file by RastrWin3 and put it in /samples folder
 2. Run "main" file
-3. Input path to .json and .csv files
+3. Input path to .json and .csv files forming flowgate and trajectory
 4. Input value of active power fluctuation
 
 _Example of script running:_
 ```commandline
->> Select path to flowgate .json:
-C:\...\samples\flowgate.json
-
->> Select path to faults .json:
-C:\...\samples\faults.json
-
->> Select path to trajectory .csv:
-C:\...\samples\vector.csv
-
->> Input positive power fluctuations:
-30
+>> Select path to flowgate .json: C:\...\samples\flowgate.json
+>> Select path to faults .json: C:\...\samples\faults.json
+>> Select path to trajectory .csv: C:\...\samples\vector.csv
+>> Input positive power fluctuations: 30
 ```
 _Example of script output:_
 ```commandline
@@ -39,7 +32,7 @@ _Example of script output:_
 >> MPF by the acceptable voltage level in the pre-emergency regime (1,15*Ucr): 2757.89
 >> MPF in the post-emergency regime after fault (0.92*Pmax): 2132.61
 >> MPF by the acceptable voltage level in the post-emergency regime after fault (1.1*Ucr): 2339.69
->> MPF by acceptable current in normal regime (Iacc) (Iacc): 1708.17
+>> MPF by acceptable current in normal regime (Iacc) (Iacc): 1787.14
 >> MPF by acceptable current in the post-emergency regime after fault (Iem_acc): 1479.26
 
 ```
