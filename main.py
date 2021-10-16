@@ -1,6 +1,7 @@
 import data_extract
 import file_creating
 import calc_criteria
+import os
 
 print("Hello. Let`s calculate maximum power flow (MPF)")
 
@@ -11,33 +12,32 @@ faults_lines = None
 p_fluctuations = 0
 
 # Select path to flowgate .json
-print("Select path to flowgate .json:")
 try:
-    flowgate_lines = data_extract.json_to_dic(input())
+    flowgate_lines = data_extract.json_to_dic(input("Select path to "
+                                                    "flowgate .json: "))
 except:
     print("Unknown path, type of file or folder does not contain a file")
     exit()
 
 # Select path to faults .json
-print("Select path to faults .json:")
 try:
-    faults_lines = data_extract.json_to_dic(input())
+    faults_lines = data_extract.json_to_dic(input("Select path to "
+                                                  "faults .json: "))
 except:
     print("Unknown path, type of file or folder does not contain a file")
     exit()
 
 # Select path to trajectory .csv
-print("Select path to trajectory .csv:")
 try:
-    trajectory_nodes = data_extract.csv_to_list(input())
+    trajectory_nodes = data_extract.csv_to_list(input("Select path to "
+                                                      "trajectory .csv: "))
 except:
     print("Unknown path, type of file or folder does not contain a file")
     exit()
 
 # Input power fluctuation
-print("Input positive power fluctuations:")
 try:
-    p_fluctuations = int(input())
+    p_fluctuations = int(input("Input positive power fluctuations: "))
 except:
     print("Input positive number")
     exit()
@@ -59,6 +59,12 @@ print(f"MPF by the acceptable voltage level "
       f"{calc_criteria.criteria4(p_fluctuations, faults_lines)}")
 print(f"MPF by acceptable current in normal regime (Iacc): "
       f"{calc_criteria.criteria5(p_fluctuations)}")
-print(f"MPF by acceptable current"
+print(f"MPF by acceptable current "
       f"in the post-emergency regime after fault (Iem_acc): "
       f"{calc_criteria.criteria6(p_fluctuations, faults_lines)}")
+
+# Delete temporary files
+for item in os.listdir('.'):
+    if item.endswith(".sch") or item.endswith(".ut2"):
+        os.remove(item)
+

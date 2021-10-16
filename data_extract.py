@@ -3,7 +3,10 @@ import csv
 
 
 def csv_to_list(path: str) -> [dict]:
-    """ Parse .сsv to list of dictionaries"""
+    """
+    Parse .сsv to list of dictionaries
+    path: str path to .csv file
+    """
 
     dict_list = []
 
@@ -18,7 +21,10 @@ def csv_to_list(path: str) -> [dict]:
 
 
 def json_to_dic(path: str) -> dict:
-    """ Parse .json to dic """
+    """
+    Parse .json to dic
+    path: str path to .json file
+    """
 
     with open(path, "r") as json_data:
         dictionary = json.load(json_data)

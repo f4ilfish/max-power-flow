@@ -5,7 +5,10 @@ rastr = win32com.client.Dispatch('Astra.Rastr')
 
 
 def criteria1(p_fluctuations: float) -> float:
-    """ Calculation of the maximum power flow (MPF) in normal regime """
+    """
+    Calculation of the maximum power flow (MPF) in normal regime
+    p_fluctuations: float value of active power fluctuation
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)
@@ -24,8 +27,11 @@ def criteria1(p_fluctuations: float) -> float:
 
 
 def criteria2(p_fluctuations: float) -> float:
-    """ Calculation of the maximum power flow by the acceptable voltage level
-    in the pre-emergency regime """
+    """
+    Calculation of the maximum power flow by the acceptable voltage level
+    in the pre-emergency regime
+    p_fluctuations: float value of active power fluctuation
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)
@@ -55,8 +61,12 @@ def criteria2(p_fluctuations: float) -> float:
 
 
 def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
-    """ Calculation of the maximum power flow (MPF)
-    in the post-emergency regime after fault """
+    """
+    Calculation of the maximum power flow (MPF)
+    in the post-emergency regime after fault
+    p_fluctuations: float value of active power fluctuation
+    faults_lines: dict of modeling faults
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)
@@ -133,9 +143,12 @@ def criteria3(p_fluctuations: float, faults_lines: dict) -> float:
 
 
 def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
-    """ Calculation of the maximum power flow (MPF)
-    by the acceptable voltage level
-    in the post-emergency regime after fault """
+    """
+    Calculation of the maximum power flow (MPF) by the acceptable voltage level
+    in the post-emergency regime after fault
+    p_fluctuations: float value of active power fluctuation
+    faults_lines: dict of modeling faults
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)
@@ -208,8 +221,11 @@ def criteria4(p_fluctuations: float, faults_lines: dict) -> float:
 
 
 def criteria5(p_fluctuations: float) -> float:
-    """ Calculation of a maximum power flow (MPF) by acceptable current
-    in normal regime """
+    """
+    Calculation of a maximum power flow (MPF) by acceptable current
+    in normal regime
+    p_fluctuations: float value of active power fluctuation
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)
@@ -238,8 +254,12 @@ def criteria5(p_fluctuations: float) -> float:
 
 
 def criteria6(p_fluctuations: float, faults_lines: dict):
-    """ Calculation of a maximum power flow (MPF)
-    by acceptable current  in the post-emergency regime after fault """
+    """
+    Calculation of a maximum power flow (MPF) by acceptable current
+    in the post-emergency regime after fault
+    p_fluctuations: float value of active power fluctuation
+    faults_lines: dict of modeling faults
+    """
 
     # Load a regime files and set weighting parameters
     regime_config.load_clean_regime(rastr)

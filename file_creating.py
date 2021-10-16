@@ -4,13 +4,16 @@ rastr = win32com.client.Dispatch('Astra.Rastr')
 
 
 def create_file_sch(flowgate_lines: dict, flowgate_name: str) -> None:
-    """ Create .sch file based on RastrWin3 template
-    from flowgate dictionary"""
+    """
+    Create .sch file based on RastrWin3 template from flowgate dictionary
+    flowgate_lines: dict of branches forming flowgate
+    flowgate_name: str name of flowgate
+    """
 
     # Create new empty .sch file based on template
-    rastr.Save('sech.sch', 'shablon/сечения.sch')
+    rastr.Save('sech.sch', 'rastr_file_patterns/сечения.sch')
     # Open the created file
-    rastr.Load(1, 'sech.sch', 'shablon/сечения.sch')
+    rastr.Load(1, 'sech.sch', 'rastr_file_patterns/сечения.sch')
 
     # Redefining objects RastrWin3
     flow_gate = rastr.Tables('sechen')
@@ -41,17 +44,20 @@ def create_file_sch(flowgate_lines: dict, flowgate_name: str) -> None:
         group_line.Cols('iq').SetZ(i, end_node)
 
     # Resave .sch file
-    rastr.Save('sech.sch', 'shablon/сечения.sch')
+    rastr.Save('sech.sch', 'rastr_file_patterns/сечения.sch')
 
 
 def create_file_ut2(trajectory_nodes: list) -> None:
-    """ Create .ut2 file based on RastrWin3 template
-    from list of trajectories`s nodes"""
+    """
+    Create .ut2 file based on RastrWin3 template
+    from list of trajectories`s nodes
+    trajectory_nodes: list of nodes forming weighting regime trajectory
+    """
 
     # Create new empty .ut2 file based on template
-    rastr.Save('traj.ut2', 'shablon/траектория утяжеления.ut2')
+    rastr.Save('traj.ut2', 'rastr_file_patterns/траектория утяжеления.ut2')
     # Open the created file
-    rastr.Load(1, 'traj.ut2', 'shablon/траектория утяжеления.ut2')
+    rastr.Load(1, 'traj.ut2', 'rastr_file_patterns/траектория утяжеления.ut2')
 
     # Redefining objects RastrWin3
     trajectory = rastr.Tables('ut_node')
@@ -92,4 +98,4 @@ def create_file_ut2(trajectory_nodes: list) -> None:
             trajectory.Cols('tg').SetZ(node_data[node_number], power_tg)
 
     # Resave .ut2 file
-    rastr.Save('traj.ut2', 'shablon/траектория утяжеления.ut2')
+    rastr.Save('traj.ut2', 'rastr_file_patterns/траектория утяжеления.ut2')
