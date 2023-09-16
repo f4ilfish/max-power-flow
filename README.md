@@ -99,7 +99,7 @@ sta | Line status     | 0 - on, 1 - off
 
 _About trajectory .csv_
 
-Use faults .json file such a this structure:
+Use trajectory .csv file such a this structure:
 ```editorconfig
     variable,node,value,tg
     pn,23,-3.0,1
